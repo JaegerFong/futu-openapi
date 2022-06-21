@@ -134,6 +134,11 @@ type RespChan interface {
 	Close()
 }
 
+const (
+	CHAN_TYPE_GET      uint32 = 1
+	CHAN_TYPE_CALLBACK uint32 = 2
+)
+
 type Registry struct {
 	m  map[string]RespChan
 	mu sync.Mutex
@@ -171,7 +176,7 @@ func (reg *Registry) Get(protoId, serial uint32) RespChan {
 	return respChan
 }
 
-func (reg *Registry) rkey(protoId uint32, serial uint32) string {
+func (reg *Registry) rkey(protoId, serial uint32) string {
 	return fmt.Sprintf("%d-%d", protoId, serial)
 }
 
