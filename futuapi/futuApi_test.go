@@ -57,7 +57,11 @@ func TestFutuAPI_GetCapitalDistribution(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	logrus.Info(rsp)
+	data := rsp.S2C
+	inFormatter := fmt.Sprintf("【In】 特大:%d 大:%d 中:%d 小额:%d \n", data.CapitalInSuper, data.CapitalInBig, data.CapitalInMid, data.CapitalInSmall)
+	outFormatter := fmt.Sprintf("【Out】 \n特大:%d 大:%d 中:%d 小额:%d \n", data.CapitalOutSuper, data.CapitalOutBig, data.CapitalOutMid, data.CapitalOutSmall)
+
+	logrus.Info(inFormatter, outFormatter)
 }
 
 func TestFutuAPI_GetCapitalFlow(t *testing.T) {
@@ -67,19 +71,25 @@ func TestFutuAPI_GetCapitalFlow(t *testing.T) {
 		Market: &m,
 		Code:   &ljcode,
 	}
-	begin := "2022-06-01"
-	end := "2022-06-20"
+	begin := "2022-08-22"
+	end := "2022-08-22"
 
 	apireq := NewFutuAPIT(1, CLIENT_ID)
 
 	ctx := context.Background()
 	apireq.Connect(ctx, CLIENT_ADDR)
-	rsp, err := apireq.GetCapitalFlow(ctx, lj, int32(qotcommon.PeriodType_PeriodType_DAY), begin, end)
+	rsp, err := apireq.GetCapitalFlow(ctx, lj, int32(qotcommon.PeriodType_PeriodType_INTRADAY), begin, end)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	logrus.Info(rsp)
+	data := rsp.S2C.FlowItemList
+	for _, v := range data {
+		s := fmt.Sprintf("[UpdateTime:%s] super:%f big:%f mid:%f small:%f", v.GetTime(), v.GetSuperInFlow(), v.GetBigInFlow(), v.GetMidInFlow(), v.GetSmlInFlow())
+		logrus.Info(s)
+	}
+
+	// logrus.Info(rsp)
 }
 
 func TestFutuAPI_GetMarketState(t *testing.T) {
@@ -124,23 +134,24 @@ func TestFutuAPI_GetMarketState(t *testing.T) {
 
 func TestFutuAPI_StockFilter(t *testing.T) {
 	var begin int32 = 1
-	var num int32 = 10
-	var tor float64 = 20
+	var num int32 = 20
 	isnofilter := false
 
 	market := int32(qotcommon.QotMarket_QotMarket_CNSH_Security)
 	var trunoverday int32 = 5
+	var ttor float64 = 5
 	turnoverrate := &qotstockfilter.AccumulateFilter{
 		FieldName:  (*int32)(qotstockfilter.AccumulateField_AccumulateField_TurnoverRate.Enum()),
-		FilterMin:  &tor,
+		FilterMin:  &ttor,
 		IsNoFilter: &isnofilter,
 		Days:       &trunoverday,
 	}
 
 	var changedays int32 = 5
+	var ctor float64 = 3
 	changerate := &qotstockfilter.AccumulateFilter{
 		FieldName:  (*int32)(qotstockfilter.AccumulateField_AccumulateField_ChangeRate.Enum()),
-		FilterMin:  &tor,
+		FilterMin:  &ctor,
 		IsNoFilter: &isnofilter,
 		Days:       &changedays,
 	}
